@@ -5,7 +5,8 @@ import tempfile
 import os
 import time
 from gtts import gTTS
-import speech_recognition as sr
+from st_audiorec import st_audiorec
+
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="BROVIS - JARVIS Edition", layout="centered")
