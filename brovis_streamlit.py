@@ -5,8 +5,6 @@ import tempfile
 import os
 import time
 from gtts import gTTS
-from st_audiorec import st_audiorec
-
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="BROVIS - JARVIS Edition", layout="centered")
@@ -55,13 +53,14 @@ h1, h2, h3 {
     margin: 10px 0;
     font-weight: 500;
 }
+.footer-note { text-align:center; color:#00ffc6; margin-top:10px; font-size:14px; }
 footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
 # --- TITLE ---
 st.markdown("<h1>🤖 BROVIS <span style='font-size:20px;'>(JARVIS Edition)</span></h1>", unsafe_allow_html=True)
-st.caption("Your AI Voice Assistant — Powered by Mistral (Ollama) + Streamlit + gTTS")
+st.caption("Your AI Assistant — Powered by Mistral (Ollama) + Streamlit + gTTS")
 
 # --- SIDEBAR ---
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=80)
@@ -69,7 +68,7 @@ st.sidebar.title("⚙️ Settings")
 use_ollama = st.sidebar.checkbox("Use Ollama (Mistral)", value=True)
 tts_language = st.sidebar.selectbox("Voice language", ["en", "hi"])
 st.sidebar.markdown("---")
-st.sidebar.info("💡 Tip: You can type your question or upload a short audio file (.wav or .mp3).")
+st.sidebar.info("💡 Tip: Type any message — BROVIS will reply and speak!")
 
 # --- UTILITIES ---
 def query_ollama(prompt: str, timeout=30) -> str:
@@ -92,6 +91,8 @@ def query_ollama(prompt: str, timeout=30) -> str:
         return "(ollama not found)"
     except subprocess.TimeoutExpired:
         return "(ollama timed out)"
+    except Exception as e:
+        return f"(ollama error: {e})"
 
 def speak_and_play(text: str, lang="en"):
     try:
@@ -106,49 +107,25 @@ def speak_and_play(text: str, lang="en"):
     except Exception as e:
         st.error(f"TTS error: {e}")
 
-def transcribe_audio_file(uploaded_file) -> str:
-    recognizer = sr.Recognizer()
-    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as f:
-        f.write(uploaded_file.read())
-        tmp_path = f.name
-    try:
-        with sr.AudioFile(tmp_path) as source:
-            audio = recognizer.record(source)
-            text = recognizer.recognize_google(audio)
-            return text
-    except Exception as e:
-        return f"(Audio error: {e})"
-    finally:
-        try: os.unlink(tmp_path)
-        except: pass
-
 # --- MAIN UI ---
 st.markdown("### 💬 Talk to BROVIS")
-user_input = st.text_area("Type your command or message:", placeholder="Example: What's the weather today?", height=120)
-uploaded_audio = st.file_uploader("🎙️ Or upload your voice (WAV or MP3)", type=["wav","mp3","m4a","ogg"])
+
+user_input = st.text_area("Type your command or message:", placeholder="Example: Tell me a joke.", height=120)
 send = st.button("🚀 Ask BROVIS")
 
 # --- CHAT OUTPUT ---
 if send:
     query = user_input.strip()
-    if not query and uploaded_audio:
-        with st.spinner("🎧 Transcribing your voice..."):
-            query = transcribe_audio_file(uploaded_audio)
-            if "(Audio error" in query:
-                st.error(query)
-                query = ""
-            else:
-                st.success(f"🎙️ You said: {query}")
 
     if not query:
-        st.warning("Please type or upload a message first.")
+        st.warning("Please type something first.")
     else:
         st.markdown(f"<div class='chat-bubble'><b>You:</b> {query}</div>", unsafe_allow_html=True)
         with st.spinner("🤖 BROVIS is thinking..."):
             response = ""
             if use_ollama:
                 result = query_ollama(query)
-                if "(ollama not found" not in result:
+                if "(ollama not found" not in result and "(ollama error" not in result:
                     response = result
                 else:
                     st.info(result)
@@ -160,4 +137,4 @@ if send:
 
 # --- FOOTER ---
 st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#00ffc6;'>⚡ BROVIS - Created by Ayush (ayu-haker) | Powered by Streamlit & Mistral ⚡</p>", unsafe_allow_html=True)
+st.markdown("<p class='footer-note'>⚡ BROVIS - Created by Ayush (ayu-haker) | Powered by Streamlit & Mistral ⚡</p>", unsafe_allow_html=True)
