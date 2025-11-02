@@ -1,4 +1,4 @@
-streamlit==1.25.0
+streamlit==1.39.0
 gTTS==2.4.0
-SpeechRecognition==3.8.1
-pillow>=10.3.0
+SpeechRecognition==3.10.4
+pillow==10.4.0
